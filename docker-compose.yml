@@ -1,0 +1,10 @@
+services:
+
+  webhook:
+    build: .
+    #image: test:latest
+    restart: unless-stopped
+    ports: 
+      - 8000:8000
+    volumes:
+      - ./logs:/logs
