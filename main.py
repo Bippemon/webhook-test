@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
-from os.path import exists
 from zoneinfo import ZoneInfo
 
 import json
@@ -10,7 +9,7 @@ import os
 os.makedirs("logs", exist_ok=True)
 LOG_PATH = "logs/logs.csv"
 
-if exists(LOG_PATH):
+if os.path.exists(LOG_PATH):
     pass
 else:
     with open(mode='x', file=LOG_PATH) as f:
@@ -34,7 +33,7 @@ class SensorData(BaseModel):
 
 app = FastAPI()
 
-@app.post("/uplink")
+@app.post("/uplink", status_code=200)
 async def create_sensor_data_obj(data: SensorData):
     time = sweden_time(data.time)
     
@@ -60,10 +59,10 @@ async def create_sensor_data_obj(data: SensorData):
             dragino_snr = i["snr"]
 
     if temperature is None and humidity is None:
-        return 201
+        return {"status": "skipped", "reason": "no sensor data"}
 
     write_data(time, device_name, temperature, humidity, data.dr, data.fCnt, milesight_rssi, milesight_snr, dragino_rssi, dragino_snr)
-    return 200
+    return {"status": "ok"}
 
 
 def write_data(time, device_name, temperature, humidity, dr, fcounter, milesight_rssi, milesight_snr, dragino_rssi, dragino_snr):
